@@ -1,0 +1,48 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+
+Route::get('/clear-cache', function () {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+
+    return 'Cache cleared successfully';
+});
+
+
+Route::get('/', function () {
+    return redirect('/admin');
+});
+
+// User dashboard (protected)
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+});
+
+// User authentication routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [UserController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [UserController::class, 'login'])->name('login.post');
+    Route::get('/register', [UserController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [UserController::class, 'register'])->name('register.post');
+});
+
+// User logout route
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [UserController::class, 'logout'])->name('logout');
+});
+
+// Campaign tracking routes (public - no auth required)
+Route::get('/campaigns/{campaign}/track/open/{contact}', [App\Http\Controllers\CampaignController::class, 'trackOpen'])
+    ->name('campaigns.track.open');
+Route::get('/campaigns/{campaign}/track/click/{contact}', [App\Http\Controllers\CampaignController::class, 'trackClick'])
+    ->name('campaigns.track.click');
+
+require __DIR__ . '/admin.php';
+
+
